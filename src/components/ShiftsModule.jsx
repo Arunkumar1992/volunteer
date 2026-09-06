@@ -9,6 +9,7 @@ import {
   X
 } from 'lucide-react';
 import { SHIFT_TYPES } from '../types';
+import ToggleSwitch from './ToggleSwitch';
 
 export default function ShiftsModule({
   shifts = [],
@@ -63,7 +64,8 @@ export default function ShiftsModule({
     const updated = shiftList.map(s => {
       const sId = typeof s === 'string' ? s : s.id;
       if (sId === shiftId) {
-        return typeof s === 'string' ? { id: s, name: s, enabled: false } : { ...s, enabled: !s.enabled };
+        const isCurrEnabled = typeof s === 'string' ? true : (s.enabled ?? true);
+        return typeof s === 'string' ? { id: s, name: s, enabled: !isCurrEnabled } : { ...s, enabled: !isCurrEnabled };
       }
       return s;
     });
@@ -161,11 +163,11 @@ export default function ShiftsModule({
               value={newShiftName}
               onChange={(e) => setNewShiftName(e.target.value)}
               placeholder="e.g. Evening Wrap-up (3:30–5:30pm)"
-              className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#155e4b]"
+              className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#155e4b]/10 focus:border-[#155e4b] transition-all font-medium shadow-2xs"
             />
             <button
               type="submit"
-              className="px-5 py-2.5 rounded-xl bg-[#155e4b] hover:bg-[#0f4b3c] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm shrink-0"
+              className="px-5 py-2.5 rounded-xl bg-[#155e4b] hover:bg-[#0f4b3c] text-white text-xs font-extrabold flex items-center gap-1.5 shadow-sm active:scale-95 transition-all shrink-0"
             >
               <Plus className="h-4 w-4" />
               Save Shift
@@ -213,17 +215,13 @@ export default function ShiftsModule({
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
-                      {/* Enable / Disable Toggle Pill */}
-                      <button
-                        onClick={() => handleToggleShiftType(shiftId)}
-                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all ${
-                          isEnabled
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                            : 'bg-slate-200 text-slate-600 border-slate-300'
-                        }`}
-                      >
-                        {isEnabled ? 'Enabled ✓' : 'Disabled ✗'}
-                      </button>
+                      {/* Enable / Disable Toggle Switch */}
+                      <ToggleSwitch
+                        checked={isEnabled}
+                        onChange={() => handleToggleShiftType(shiftId)}
+                        size="sm"
+                        label={isEnabled ? 'Enabled' : 'Disabled'}
+                      />
 
                       {/* Delete Button */}
                       <button

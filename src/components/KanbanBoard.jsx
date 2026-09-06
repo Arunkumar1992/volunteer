@@ -181,7 +181,7 @@ export default function KanbanBoard({
                             <select
                               value={vol.stage}
                               onChange={(e) => onUpdateStage(vol.id, e.target.value)}
-                              className="text-[10px] bg-slate-50 text-slate-900 border border-slate-200 rounded px-1.5 py-0.5 focus:border-[#155e4b] focus:outline-none font-bold"
+                              className="text-[10px] bg-white text-slate-900 border border-slate-200 rounded-lg px-2 py-0.5 focus:ring-2 focus:ring-[#155e4b]/20 focus:border-[#155e4b] focus:outline-none font-bold shadow-2xs"
                             >
                               {PIPELINE_STAGES.map(s => (
                                 <option key={s} value={s}>{s}</option>

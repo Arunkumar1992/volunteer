@@ -3,6 +3,7 @@ import {
   SEED_PROGRAMS, 
   SHIFT_TYPES 
 } from '../types';
+import ToggleSwitch from './ToggleSwitch';
 import { 
   checkIsMinor, 
   calculateAge 
@@ -366,17 +367,15 @@ export default function IntakeForm({
               </div>
             </div>
 
-            <div className="flex items-center gap-2 pt-1">
-              <input
-                type="checkbox"
-                id="intakeGuardianConsent"
+            <div className="flex items-center gap-3 pt-2">
+              <ToggleSwitch
                 checked={formData.guardianConsentGiven}
-                onChange={(e) => handleInputChange('guardianConsentGiven', e.target.checked)}
-                className="h-4 w-4 rounded border-slate-300 text-[#155e4b] focus:ring-[#155e4b]"
+                onChange={(val) => handleInputChange('guardianConsentGiven', val)}
+                size="sm"
               />
-              <label htmlFor="intakeGuardianConsent" className="text-xs text-slate-800 font-semibold cursor-pointer">
-                I confirm that my parent/guardian approves my application to volunteer with Kids Innovative.
-              </label>
+              <span className="text-xs text-slate-800 font-semibold cursor-pointer" onClick={() => handleInputChange('guardianConsentGiven', !formData.guardianConsentGiven)}>
+                Parent/Guardian Approval Confirmed for Application
+              </span>
             </div>
           </div>
         )}

@@ -150,7 +150,7 @@ export default function BackgroundCheckTracker({
             placeholder="Filter by volunteer name..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-teal-500 font-medium shadow-sm"
+            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#155e4b]/10 focus:border-[#155e4b] transition-all font-medium shadow-2xs"
           />
         </div>
 
@@ -227,7 +227,7 @@ export default function BackgroundCheckTracker({
                           <select
                             value={editFields.status}
                             onChange={(e) => setEditFields({ ...editFields, status: e.target.value })}
-                            className="bg-white text-slate-900 border border-slate-300 rounded p-1 text-xs font-medium"
+                            className="bg-white text-slate-900 border border-slate-200 rounded-xl px-2.5 py-1 text-xs font-semibold focus:outline-none focus:ring-4 focus:ring-[#155e4b]/10 focus:border-[#155e4b] shadow-2xs"
                           >
                             <option value="pending">Pending</option>
                             <option value="cleared">Cleared</option>
@@ -247,7 +247,7 @@ export default function BackgroundCheckTracker({
                             type="date"
                             value={editFields.clearedDate}
                             onChange={(e) => setEditFields({ ...editFields, clearedDate: e.target.value })}
-                            className="bg-white text-slate-900 border border-slate-300 rounded p-1 text-xs font-medium"
+                            className="bg-white text-slate-900 border border-slate-200 rounded-xl px-2.5 py-1 text-xs font-medium focus:outline-none focus:ring-4 focus:ring-[#155e4b]/10 focus:border-[#155e4b] shadow-2xs"
                           />
                         ) : (
                           formatDate(vol.backgroundCheck?.clearedDate)
@@ -261,7 +261,7 @@ export default function BackgroundCheckTracker({
                             type="date"
                             value={editFields.expiryDate}
                             onChange={(e) => setEditFields({ ...editFields, expiryDate: e.target.value })}
-                            className="bg-white text-slate-900 border border-slate-300 rounded p-1 text-xs font-medium"
+                            className="bg-white text-slate-900 border border-slate-200 rounded-xl px-2.5 py-1 text-xs font-medium focus:outline-none focus:ring-4 focus:ring-[#155e4b]/10 focus:border-[#155e4b] shadow-2xs"
                           />
                         ) : (
                           <span className={bgInfo.isExpired ? 'text-red-700 font-bold' : bgInfo.isExpiringSoon ? 'text-amber-800 font-bold' : 'text-slate-700'}>
@@ -275,7 +275,7 @@ export default function BackgroundCheckTracker({
                         {isEditing ? (
                           <button
                             onClick={() => handleSaveEdit(vol)}
-                            className="px-3 py-1 rounded-lg bg-teal-600 text-white text-xs font-bold hover:bg-teal-700 shadow-sm"
+                            className="px-3.5 py-1.5 rounded-xl bg-[#155e4b] hover:bg-[#0f4b3c] text-white text-xs font-extrabold shadow-sm transition-all"
                           >
                             Save
                           </button>

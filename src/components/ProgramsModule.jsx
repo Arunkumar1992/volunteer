@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { SEED_PROGRAMS, SHIFT_TYPES } from '../types';
 import ProgramShiftConfigModal from './ProgramShiftConfigModal';
+import ToggleSwitch from './ToggleSwitch';
 
 export default function ProgramsModule({
   programs = [],
@@ -213,17 +214,13 @@ export default function ProgramsModule({
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
-                      {/* Enabled / Disabled Toggle Pill */}
-                      <button
-                        onClick={() => handleToggleProgramStatus(prog.id)}
-                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all ${
-                          isEnabled
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                            : 'bg-slate-200 text-slate-600 border-slate-300'
-                        }`}
-                      >
-                        {isEnabled ? 'Enabled ✓' : 'Disabled ✗'}
-                      </button>
+                      {/* Enabled / Disabled Toggle Switch */}
+                      <ToggleSwitch
+                        checked={isEnabled}
+                        onChange={() => handleToggleProgramStatus(prog.id)}
+                        size="sm"
+                        label={isEnabled ? 'Enabled' : 'Disabled'}
+                      />
 
                       {/* Edit Program */}
                       <button
@@ -285,6 +282,7 @@ export default function ProgramsModule({
           onClose={() => setIsModalOpen(false)}
           onSaveProgram={handleSaveProgramModal}
           allVolunteers={volunteers}
+          showToast={showToast}
         />
       )}
 

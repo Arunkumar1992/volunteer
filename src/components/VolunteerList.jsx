@@ -104,7 +104,7 @@ export default function VolunteerList({
             placeholder="Search by name, email, school..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#155e4b] focus:bg-white transition-all font-medium"
+            className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-[#155e4b]/10 focus:border-[#155e4b] transition-all font-medium shadow-2xs"
           />
         </div>
 
@@ -114,7 +114,7 @@ export default function VolunteerList({
           <select
             value={stageFilter}
             onChange={(e) => setStageFilter(e.target.value)}
-            className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#155e4b]"
+            className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-4 focus:ring-[#155e4b]/10 focus:border-[#155e4b] shadow-2xs transition-all"
           >
             <option value="All">All Stages</option>
             {PIPELINE_STAGES.map(s => (
@@ -125,7 +125,7 @@ export default function VolunteerList({
           <select
             value={programFilter}
             onChange={(e) => setProgramFilter(e.target.value)}
-            className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#155e4b]"
+            className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-4 focus:ring-[#155e4b]/10 focus:border-[#155e4b] shadow-2xs transition-all"
           >
             <option value="All">All Programs</option>
             {SEED_PROGRAMS.map(p => (
@@ -136,7 +136,7 @@ export default function VolunteerList({
           <select
             value={ageFilter}
             onChange={(e) => setAgeFilter(e.target.value)}
-            className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#155e4b]"
+            className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-4 focus:ring-[#155e4b]/10 focus:border-[#155e4b] shadow-2xs transition-all"
           >
             <option value="All">All Ages</option>
             <option value="Minor">Minor</option>
