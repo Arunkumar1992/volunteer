@@ -20,14 +20,21 @@ import {
   Info,
   Send,
   CloudUpload,
-  FileText
+  FileText,
+  Copy,
+  ExternalLink,
+  Check,
+  Share2
 } from 'lucide-react';
 
 export default function IntakeForm({ 
   volunteers, 
   onSubmitIntake,
   programs = [],
-  shifts = []
+  shifts = [],
+  isExternalView = false,
+  onToggleExternalView,
+  showToast
 }) {
   const [formData, setFormData] = useState({
     firstName: '',
@@ -46,6 +53,9 @@ export default function IntakeForm({
     programPreferences: [],
     shiftAvailability: []
   });
+
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [submittedExternal, setSubmittedExternal] = useState(false);
 
   const age = calculateAge(formData.dateOfBirth);
   const isMinor = checkIsMinor(formData.dateOfBirth);
@@ -86,9 +96,24 @@ export default function IntakeForm({
     });
   };
 
+  const handleCopyShareLink = () => {
+    const shareableUrl = `${window.location.origin}${window.location.pathname}?external=true`;
+    navigator.clipboard.writeText(shareableUrl);
+    setCopiedLink(true);
+    if (showToast) {
+      showToast('Form Link Copied', 'Public volunteer application link copied to clipboard.', 'success');
+    }
+    setTimeout(() => setCopiedLink(false), 3000);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmitIntake(formData);
+    
+    if (isExternalView) {
+      setSubmittedExternal(true);
+    }
+
     // Reset form after submit
     setFormData({
       firstName: '',
@@ -109,18 +134,84 @@ export default function IntakeForm({
     });
   };
 
+  if (submittedExternal) {
+    return (
+      <div className="max-w-2xl mx-auto py-14 px-8 text-center bg-white rounded-3xl border border-slate-200 shadow-xl space-y-6 animate-scale-up my-6">
+        <div className="h-16 w-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto border border-emerald-300 shadow-xs">
+          <CheckCircle2 className="h-10 w-10" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-extrabold text-slate-900">Application Submitted!</h2>
+          <p className="text-xs sm:text-sm text-slate-600 font-medium max-w-md mx-auto leading-relaxed">
+            Thank you for applying to volunteer with <strong>Kids Innovative STEAM Education</strong>. Your application has been received and our volunteer coordinator will review your information shortly.
+          </p>
+        </div>
+        <div className="pt-2">
+          <button
+            onClick={() => setSubmittedExternal(false)}
+            className="px-6 py-2.5 rounded-xl bg-[#155e4b] hover:bg-[#0f4b3c] text-white text-xs font-extrabold transition-all shadow-sm"
+          >
+            Submit Another Application
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const handleOpenPublicForm = () => {
+    const shareableUrl = `${window.location.origin}${window.location.pathname}?external=true`;
+    window.open(shareableUrl, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in pb-12">
       
-      {/* Header Banner matching Mockup Title */}
+      {/* Admin External Share Action Toolbar (Only shown in admin view) */}
+      {!isExternalView && (
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <span className="text-[11px] font-mono font-bold text-[#155e4b] uppercase tracking-wider block mb-1">
+              External Share Portal
+            </span>
+            <h2 className="text-base sm:text-lg font-extrabold text-slate-900">
+              Share Volunteer Application Form
+            </h2>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">
+              Share this external link with applicants to load the standalone application form without CRM admin controls.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={handleCopyShareLink}
+              className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-all border border-slate-200 flex items-center gap-2 shadow-2xs active:scale-95"
+            >
+              {copiedLink ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4 text-slate-600" />}
+              <span>{copiedLink ? 'Link Copied!' : 'Copy Form Link'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleOpenPublicForm}
+              className="px-4 py-2.5 rounded-xl bg-[#155e4b] hover:bg-[#0f4b3c] text-white text-xs font-bold transition-all flex items-center gap-2 shadow-2xs active:scale-95"
+            >
+              <ExternalLink className="h-4 w-4" />
+              <span>Open Public Form Only</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Header Banner */}
       <div className="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-2xs">
         <div className="flex items-center justify-between">
           <div>
             <span className="text-[11px] font-mono font-bold text-[#155e4b] uppercase tracking-wider block mb-1">
-              Public Application Portal
+              {isExternalView ? 'Kids Innovative STEAM Education' : 'Public Application Portal'}
             </span>
             <h2 className="text-xl font-extrabold text-slate-900">
-              Add New Applicant Data
+              {isExternalView ? 'Volunteer Application Form' : 'Add New Applicant Data'}
             </h2>
             <p className="text-xs text-slate-500 font-medium mt-1">
               Fill out the volunteer applicant details, school information, program preferences, and guardian consent below.
@@ -134,84 +225,104 @@ export default function IntakeForm({
         
         {/* Section 1: Applicant Data (Strictly 2 fields per row) */}
         <div className="space-y-4">
-          <h3 className="text-sm font-extrabold text-slate-900 border-b border-slate-100 pb-2 flex items-center justify-between">
-            <span>Applicant Data</span>
-            <span className="text-xs text-slate-400 font-normal">Personal details</span>
-          </h3>
+          <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
+            <h3 className="text-sm sm:text-base font-extrabold text-slate-900">
+              Applicant Data
+            </h3>
+            <span className="text-xs text-slate-400 font-medium">Personal details</span>
+          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">First Name *</label>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">First Name *</label>
               <input
                 type="text"
                 required
                 value={formData.firstName}
                 onChange={(e) => handleInputChange('firstName', e.target.value)}
                 placeholder="Input applicant firstname"
-                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#155e4b] focus:border-[#155e4b] transition-all font-medium"
+                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#155e4b]/10 focus:border-[#155e4b] transition-all font-medium shadow-2xs"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">Last Name *</label>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">Last Name *</label>
               <input
                 type="text"
                 required
                 value={formData.lastName}
                 onChange={(e) => handleInputChange('lastName', e.target.value)}
                 placeholder="Input applicant lastname"
-                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#155e4b] focus:border-[#155e4b] transition-all font-medium"
+                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#155e4b]/10 focus:border-[#155e4b] transition-all font-medium shadow-2xs"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">Email *</label>
-              <input
-                type="email"
-                required
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                placeholder="Input applicant email"
-                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#155e4b] focus:border-[#155e4b] transition-all font-medium"
-              />
+              <label className={`text-xs font-semibold block mb-1.5 ${
+                formData.email && !formData.email.includes('@') ? 'text-rose-600' : 'text-slate-700'
+              }`}>
+                Email address *
+              </label>
+              <div className="relative">
+                <input
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  placeholder="Input applicant email (e.g. jenny@example.com)"
+                  className={`w-full px-4 py-2.5 rounded-xl text-sm transition-all font-medium shadow-2xs focus:outline-none ${
+                    formData.email && !formData.email.includes('@')
+                      ? 'bg-rose-50/40 border-2 border-rose-500 text-rose-900 placeholder:text-rose-300 focus:ring-4 focus:ring-rose-500/10'
+                      : 'bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:ring-4 focus:ring-[#155e4b]/10 focus:border-[#155e4b]'
+                  }`}
+                />
+                {formData.email && !formData.email.includes('@') && (
+                  <AlertCircle className="h-4 w-4 text-rose-500 absolute right-3.5 top-3" />
+                )}
+              </div>
+              {formData.email && !formData.email.includes('@') && (
+                <p className="text-[11px] text-rose-600 font-semibold mt-1 flex items-center gap-1">
+                  The email field must be a valid email address.
+                </p>
+              )}
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">Telephone *</label>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">Telephone *</label>
               <input
                 type="tel"
                 required
                 value={formData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
                 placeholder="Input phone number"
-                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#155e4b] focus:border-[#155e4b] transition-all font-medium"
+                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#155e4b]/10 focus:border-[#155e4b] transition-all font-medium shadow-2xs"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">School / Organization *</label>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">School / Organization *</label>
               <input
                 type="text"
                 required
                 value={formData.school}
                 onChange={(e) => handleInputChange('school', e.target.value)}
                 placeholder="Input school currently attending"
-                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#155e4b] focus:border-[#155e4b] transition-all font-medium"
+                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#155e4b]/10 focus:border-[#155e4b] transition-all font-medium shadow-2xs"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">Date of Birth *</label>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">Date of Birth *</label>
               <input
                 type="date"
                 required
                 value={formData.dateOfBirth}
                 onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
-                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#155e4b] focus:border-[#155e4b] transition-all font-medium"
+                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-4 focus:ring-[#155e4b]/10 focus:border-[#155e4b] transition-all font-medium shadow-2xs"
               />
-              <div className="mt-1 flex items-center justify-between text-[11px] text-slate-500 font-medium">
+              <div className="mt-1.5 flex items-center justify-between text-[11px] text-slate-500 font-medium">
                 <span>Calculated Age: <strong className="text-slate-900">{age} years old</strong></span>
-                <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold border ${
                   isMinor ? 'bg-amber-50 text-amber-900 border-amber-300' : 'bg-purple-50 text-purple-900 border-purple-300'
                 }`}>
                   {isMinor ? 'Minor' : 'Adult'}
@@ -223,7 +334,7 @@ export default function IntakeForm({
 
         {/* Section 2: Guardian Info for Minors (Strictly 2 fields per row) */}
         {isMinor && (
-          <div className="p-5 bg-amber-50/60 rounded-2xl border border-amber-200/80 space-y-4">
+          <div className="p-5 bg-amber-50/50 rounded-2xl border border-amber-200/80 space-y-4 shadow-2xs">
             <h3 className="text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center gap-2">
               <HeartHandshake className="h-4 w-4 text-amber-600" />
               Parent / Guardian Consent & Contact Information (Required for Minors Under 18)
@@ -231,26 +342,26 @@ export default function IntakeForm({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">Guardian Full Name *</label>
+                <label className="text-xs font-semibold text-slate-700 block mb-1.5">Guardian Full Name *</label>
                 <input
                   type="text"
                   required={isMinor}
                   value={formData.guardianName}
                   onChange={(e) => handleInputChange('guardianName', e.target.value)}
                   placeholder="Input guardian full name"
-                  className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium"
+                  className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 font-medium shadow-2xs"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">Guardian Contact & Relationship *</label>
+                <label className="text-xs font-semibold text-slate-700 block mb-1.5">Guardian Contact & Relationship *</label>
                 <input
                   type="text"
                   required={isMinor}
                   value={formData.guardianContact}
                   onChange={(e) => handleInputChange('guardianContact', e.target.value)}
                   placeholder="e.g. (604) 555-0199 (Father)"
-                  className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium"
+                  className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 font-medium shadow-2xs"
                 />
               </div>
             </div>
@@ -263,7 +374,7 @@ export default function IntakeForm({
                 onChange={(e) => handleInputChange('guardianConsentGiven', e.target.checked)}
                 className="h-4 w-4 rounded border-slate-300 text-[#155e4b] focus:ring-[#155e4b]"
               />
-              <label htmlFor="intakeGuardianConsent" className="text-xs text-slate-800 font-semibold">
+              <label htmlFor="intakeGuardianConsent" className="text-xs text-slate-800 font-semibold cursor-pointer">
                 I confirm that my parent/guardian approves my application to volunteer with Kids Innovative.
               </label>
             </div>
@@ -272,28 +383,30 @@ export default function IntakeForm({
 
         {/* Section 3: Program Preferences (Strictly 2 options per row) */}
         <div className="space-y-3">
-          <h3 className="text-sm font-extrabold text-slate-900 border-b border-slate-100 pb-2">
-            Program Preferences
-          </h3>
-          <p className="text-xs text-slate-500 font-medium">Select one or more programs you wish to support:</p>
+          <div className="border-b border-slate-100 pb-2">
+            <h3 className="text-sm sm:text-base font-extrabold text-slate-900">
+              Program Preferences
+            </h3>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">Select one or more programs you wish to support:</p>
+          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {availablePrograms.map(prog => {
               const isSelected = formData.programPreferences.includes(prog.id);
               return (
                 <div
                   key={prog.id}
                   onClick={() => toggleProgram(prog.id)}
-                  className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-start justify-between ${
+                  className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-start justify-between ${
                     isSelected
-                      ? 'bg-[#e6f4f1] border-[#155e4b] text-slate-900 shadow-2xs'
-                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                      ? 'bg-[#e6f4f1] border-[#155e4b] text-slate-900 shadow-2xs ring-1 ring-[#155e4b]'
+                      : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50/50'
                   }`}
                 >
                   <div>
-                    <div className="text-xs font-bold text-slate-900">{prog.topic}</div>
-                    <div className="text-[11px] text-slate-500 font-medium">{prog.location}</div>
-                    <div className="text-[10px] text-[#155e4b] font-mono font-bold mt-0.5">{prog.dates}</div>
+                    <div className="text-xs sm:text-sm font-bold text-slate-900">{prog.topic}</div>
+                    <div className="text-[11px] text-slate-500 font-medium mt-0.5">{prog.location}</div>
+                    <div className="text-[10px] text-[#155e4b] font-mono font-bold mt-1">{prog.dates}</div>
                   </div>
                   <input
                     type="checkbox"
@@ -309,12 +422,14 @@ export default function IntakeForm({
 
         {/* Section 4: Shift Availability (Strictly 2 options per row) */}
         <div className="space-y-3">
-          <h3 className="text-sm font-extrabold text-slate-900 border-b border-slate-100 pb-2">
-            Preferred Shift Availability
-          </h3>
-          <p className="text-xs text-slate-500 font-medium">Select all shift categories fitting your schedule:</p>
+          <div className="border-b border-slate-100 pb-2">
+            <h3 className="text-sm sm:text-base font-extrabold text-slate-900">
+              Preferred Shift Availability
+            </h3>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">Select all shift categories fitting your schedule:</p>
+          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {availableShifts.map(shift => {
               const isSelected = formData.shiftAvailability.includes(shift);
               return (
@@ -322,10 +437,10 @@ export default function IntakeForm({
                   type="button"
                   key={shift}
                   onClick={() => toggleShift(shift)}
-                  className={`p-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-between ${
+                  className={`p-3.5 rounded-2xl border text-xs sm:text-sm font-bold transition-all flex items-center justify-between ${
                     isSelected
-                      ? 'bg-[#e6f4f1] text-[#155e4b] border-[#155e4b] shadow-2xs'
-                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                      ? 'bg-[#e6f4f1] text-[#155e4b] border-[#155e4b] shadow-2xs ring-1 ring-[#155e4b]'
+                      : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
                   }`}
                 >
                   <span>{shift}</span>
@@ -343,55 +458,57 @@ export default function IntakeForm({
 
         {/* Section 5: Emergency & Health (Strictly 2 fields per row) */}
         <div className="space-y-4">
-          <h3 className="text-sm font-extrabold text-slate-900 border-b border-slate-100 pb-2">
-            Emergency Contact & Health Notes
-          </h3>
+          <div className="border-b border-slate-100 pb-2">
+            <h3 className="text-sm sm:text-base font-extrabold text-slate-900">
+              Emergency Contact & Health Notes
+            </h3>
+          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">Emergency Contact Name *</label>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">Emergency Contact Name *</label>
               <input
                 type="text"
                 required
                 value={formData.emergencyContactName}
                 onChange={(e) => handleInputChange('emergencyContactName', e.target.value)}
                 placeholder="Input contact name"
-                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 font-medium"
+                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#155e4b]/10 focus:border-[#155e4b] transition-all font-medium shadow-2xs"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">Emergency Phone *</label>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">Emergency Phone *</label>
               <input
                 type="tel"
                 required
                 value={formData.emergencyContactPhone}
                 onChange={(e) => handleInputChange('emergencyContactPhone', e.target.value)}
                 placeholder="Input contact phone"
-                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 font-medium"
+                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#155e4b]/10 focus:border-[#155e4b] transition-all font-medium shadow-2xs"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">Relationship *</label>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">Relationship *</label>
               <input
                 type="text"
                 required
                 value={formData.emergencyContactRelationship}
                 onChange={(e) => handleInputChange('emergencyContactRelationship', e.target.value)}
                 placeholder="e.g. Parent"
-                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 font-medium"
+                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#155e4b]/10 focus:border-[#155e4b] transition-all font-medium shadow-2xs"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">Medical Concerns / Allergies (Optional)</label>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">Medical Concerns / Allergies (Optional)</label>
               <input
                 type="text"
                 value={formData.medicalNotes}
                 onChange={(e) => handleInputChange('medicalNotes', e.target.value)}
                 placeholder="Input medical accommodations or dietary restrictions"
-                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#155e4b] focus:border-[#155e4b] transition-all font-medium"
+                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#155e4b]/10 focus:border-[#155e4b] transition-all font-medium shadow-2xs"
               />
             </div>
           </div>
@@ -399,23 +516,25 @@ export default function IntakeForm({
 
         {/* Section 6: Document & Portfolio Dropzone */}
         <div className="space-y-3">
-          <h3 className="text-sm font-extrabold text-slate-900 border-b border-slate-100 pb-2">
-            Document & Waiver Upload (Optional)
-          </h3>
+          <div className="border-b border-slate-100 pb-2">
+            <h3 className="text-sm sm:text-base font-extrabold text-slate-900">
+              Document & Waiver Upload (Optional)
+            </h3>
+          </div>
 
-          <div className="p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center bg-slate-50/50 hover:bg-slate-50 transition-colors cursor-pointer">
+          <div className="p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 transition-all cursor-pointer">
             <CloudUpload className="h-8 w-8 text-[#155e4b] mx-auto mb-2 opacity-80" />
-            <div className="text-xs font-bold text-[#155e4b]">
+            <div className="text-xs sm:text-sm font-bold text-[#155e4b]">
               Click to upload file <span className="text-slate-500 font-normal">or drag and drop file here</span>
             </div>
-            <div className="text-[10px] text-slate-400 mt-1 font-mono">
+            <div className="text-[10px] sm:text-xs text-slate-400 mt-1 font-mono">
               Maximal file size: 10 MB (PDF, JPG, PNG format)
             </div>
           </div>
         </div>
 
-        {/* Form Actions */}
-        <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
+        {/* Form Actions (Matching bottom checkout submit button in reference image) */}
+        <div className="pt-6 flex flex-col sm:flex-row items-center justify-end gap-3 border-t border-slate-100">
           <button
             type="button"
             onClick={() => {
@@ -437,16 +556,17 @@ export default function IntakeForm({
                 shiftAvailability: []
               });
             }}
-            className="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 transition-all"
+            className="w-full sm:w-auto px-6 py-3 rounded-xl border border-slate-200 text-slate-600 text-xs sm:text-sm font-bold hover:bg-slate-50 transition-all"
           >
-            Cancel
+            Clear Fields
           </button>
           
           <button
             type="submit"
-            className="px-7 py-2.5 rounded-xl bg-[#155e4b] hover:bg-[#0f4b3c] text-white text-xs font-extrabold shadow-sm active:scale-95 transition-all flex items-center gap-1.5"
+            className="w-full sm:w-auto px-8 py-3 rounded-xl bg-[#155e4b] hover:bg-[#0f4b3c] text-white text-xs sm:text-sm font-extrabold shadow-sm active:scale-95 transition-all flex items-center justify-center gap-2"
           >
-            <span>Save Application</span>
+            <Send className="h-4 w-4" />
+            <span>Submit Application</span>
           </button>
         </div>
 

@@ -9,7 +9,11 @@ import {
   Sparkles, 
   Info,
   Layers,
-  Clock
+  Clock,
+  Table,
+  Search,
+  Filter,
+  Users
 } from 'lucide-react';
 import { SEED_PROGRAMS } from '../types';
 import SidePanelAssign from './SidePanelAssign';
@@ -27,6 +31,16 @@ export default function CalendarView({
   programs = [],
   shifts = []
 }) {
+  // Main layout mode: 'calendar' vs 'table'
+  const [mainLayoutMode, setMainLayoutMode] = useState('calendar');
+
+  // Filter state for All Shifts vs Unstaffed Shifts Only
+  const [showUnstaffedOnly, setShowUnstaffedOnly] = useState(false);
+
+  // Table View filters
+  const [tableSearchTerm, setTableSearchTerm] = useState('');
+  const [tableStatusFilter, setTableStatusFilter] = useState('All'); // 'All', 'Unstaffed', 'Staffed'
+
   // Current month/year/day state (Default to August 2026: year=2026, monthIndex=7, dayNum=15)
   const [selectedYear, setSelectedYear] = useState(2026);
   const [selectedMonth, setSelectedMonth] = useState(7); // 7 = August (0-indexed)
@@ -165,75 +179,311 @@ export default function CalendarView({
   const currentWeekDays = weeksList[weekIndex] || weeksList[0] || [];
   const selectedDayFormatted = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(selectedDayNum).padStart(2, '0')}`;
 
+  // Generate all scheduled shift instances for Table View
+  const tableShiftRows = daysArray.reduce((acc, day) => {
+    if (!day.formattedDate) return acc;
+    const progsOnDay = programList.filter(prog => 
+      day.formattedDate >= prog.startDate && day.formattedDate <= prog.endDate
+    );
+    
+    progsOnDay.forEach(prog => {
+      const assignedList = volunteers.filter(v => 
+        v.programAssignments && v.programAssignments.some(a => 
+          a.programId === prog.id && a.assignedDate === day.formattedDate
+        )
+      );
+      const isUnstaffed = assignedList.length === 0;
+      
+      acc.push({
+        id: `${prog.id}-${day.formattedDate}`,
+        date: day.formattedDate,
+        dayNumber: day.dayNumber,
+        program: prog,
+        assignedVolunteers: assignedList,
+        isUnstaffed
+      });
+    });
+    return acc;
+  }, []);
+
+  // Filter table rows by search and status filter
+  const filteredTableRows = tableShiftRows.filter(row => {
+    const matchesSearch = tableSearchTerm === '' ||
+      row.program.topic.toLowerCase().includes(tableSearchTerm.toLowerCase()) ||
+      row.program.location.toLowerCase().includes(tableSearchTerm.toLowerCase()) ||
+      row.date.includes(tableSearchTerm);
+    
+    const matchesStatus = tableStatusFilter === 'All' ||
+      (tableStatusFilter === 'Unstaffed' && row.isUnstaffed) ||
+      (tableStatusFilter === 'Staffed' && !row.isUnstaffed);
+
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <div className="space-y-4 animate-fade-in pb-12">
       
-      {/* Calendar Toolbar Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
-        
-        {/* Left: Unstaffed Alert Badge */}
-        <div className="flex items-center gap-2">
-          {unstaffedDatesCount > 0 ? (
-            <div className="px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-1.5 animate-pulse">
-              <AlertTriangle className="h-4 w-4 text-rose-600" />
-              <span>{unstaffedDatesCount} Unstaffed Shifts</span>
-            </div>
-          ) : (
-            <span className="text-xs font-bold text-slate-700 font-mono">
-              View: {getHeaderTitle()}
-            </span>
-          )}
-        </div>
+      {/* View Switcher Tabs Bar (Calendar View vs Table View) */}
+      <div className="border-b border-slate-200 flex items-center justify-between gap-3 pt-1">
+        <div className="flex items-center gap-1 text-xs font-semibold">
+          <button
+            onClick={() => setMainLayoutMode('calendar')}
+            className={`py-2.5 px-4 flex items-center gap-2 border-b-2 transition-all ${
+              mainLayoutMode === 'calendar'
+                ? 'border-[#155e4b] text-[#155e4b] font-black'
+                : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'
+            }`}
+          >
+            <CalendarIcon className="h-4 w-4" />
+            <span>Calendar View</span>
+          </button>
 
-        {/* Right: Date Stepper & View Switcher (Replaces duplicate month dropdown) */}
-        <div className="flex items-center gap-3">
-          
-          {/* Stepper Controls */}
-          <div className="flex items-center bg-slate-100 border border-slate-200 rounded-xl p-1 shadow-inner">
-            <button
-              onClick={handlePrev}
-              className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white transition-all"
-              title="Previous"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-
-            {/* Stepper Label */}
-            <div className="px-3.5 text-xs font-extrabold text-slate-800 font-mono min-w-36 text-center">
-              {getHeaderTitle()}
-            </div>
-
-            <button
-              onClick={handleNext}
-              className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white transition-all"
-              title="Next"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-
-          {/* View Mode Pill Switcher (Single clean view filter) */}
-          <div className="flex items-center bg-slate-100 border border-slate-200 rounded-xl p-1 shrink-0">
-            {['Month', 'Week', 'Day'].map(v => (
-              <button
-                key={v}
-                onClick={() => setCalendarViewMode(v)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  calendarViewMode === v
-                    ? 'bg-[#155e4b] text-white shadow-2xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {v}
-              </button>
-            ))}
-          </div>
-
+          <button
+            onClick={() => setMainLayoutMode('table')}
+            className={`py-2.5 px-4 flex items-center gap-2 border-b-2 transition-all ${
+              mainLayoutMode === 'table'
+                ? 'border-[#155e4b] text-[#155e4b] font-black'
+                : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'
+            }`}
+          >
+            <Table className="h-4 w-4" />
+            <span>Table View</span>
+          </button>
         </div>
       </div>
 
+      {/* CALENDAR VIEW MODE */}
+      {mainLayoutMode === 'calendar' && (
+        <>
+          {/* Calendar Toolbar Header */}
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+            
+            {/* Left: Filter Toggle for All vs Unstaffed Shifts */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowUnstaffedOnly(false)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  !showUnstaffedOnly
+                    ? 'bg-[#155e4b] text-white shadow-2xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                All Shifts
+              </button>
+
+              <button
+                onClick={() => setShowUnstaffedOnly(prev => !prev)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  showUnstaffedOnly
+                    ? 'bg-rose-600 text-white shadow-2xs ring-2 ring-rose-600/30 font-black'
+                    : unstaffedDatesCount > 0
+                    ? 'bg-rose-50 border border-rose-200 text-rose-800 hover:bg-rose-100 animate-pulse'
+                    : 'bg-slate-100 text-slate-500'
+                }`}
+                title="Click to toggle filter between All Shifts and Unstaffed Shifts only"
+              >
+                <AlertTriangle className={`h-4 w-4 ${showUnstaffedOnly ? 'text-white' : 'text-rose-600'}`} />
+                <span>{unstaffedDatesCount} Unstaffed Shifts</span>
+              </button>
+            </div>
+
+            {/* Right: Date Stepper & View Switcher */}
+            <div className="flex items-center gap-3">
+              
+              {/* Stepper Controls */}
+              <div className="flex items-center bg-slate-100 border border-slate-200 rounded-xl p-1 shadow-inner">
+                <button
+                  onClick={handlePrev}
+                  className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white transition-all"
+                  title="Previous"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+
+                {/* Stepper Label */}
+                <div className="px-3.5 text-xs font-extrabold text-slate-800 font-mono min-w-36 text-center">
+                  {getHeaderTitle()}
+                </div>
+
+                <button
+                  onClick={handleNext}
+                  className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white transition-all"
+                  title="Next"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* View Mode Pill Switcher (Single clean view filter) */}
+              <div className="flex items-center bg-slate-100 border border-slate-200 rounded-xl p-1 shrink-0">
+                {['Month', 'Week', 'Day'].map(v => (
+                  <button
+                    key={v}
+                    onClick={() => setCalendarViewMode(v)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      calendarViewMode === v
+                        ? 'bg-[#155e4b] text-white shadow-2xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
+
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* TABLE VIEW MODE */}
+      {mainLayoutMode === 'table' && (
+        <div className="space-y-4">
+          
+          {/* Table Search & Filter Bar */}
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3 flex-1 min-w-[240px]">
+              <div className="relative flex-1">
+                <Search className="h-4 w-4 text-slate-400 absolute left-3.5 top-3" />
+                <input
+                  type="text"
+                  value={tableSearchTerm}
+                  onChange={(e) => setTableSearchTerm(e.target.value)}
+                  placeholder="Search shifts by topic, date, or location..."
+                  className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#155e4b]/20 font-medium"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider font-mono">Status:</span>
+              {['All', 'Unstaffed', 'Staffed'].map(status => (
+                <button
+                  key={status}
+                  onClick={() => setTableStatusFilter(status)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    tableStatusFilter === status
+                      ? 'bg-[#155e4b] text-white shadow-2xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {status} ({
+                    status === 'All' ? tableShiftRows.length :
+                    status === 'Unstaffed' ? tableShiftRows.filter(r => r.isUnstaffed).length :
+                    tableShiftRows.filter(r => !r.isUnstaffed).length
+                  })
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Table Container */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider font-mono">
+                    <th className="py-3.5 px-4">Date</th>
+                    <th className="py-3.5 px-4">Program & Shift</th>
+                    <th className="py-3.5 px-4">Location</th>
+                    <th className="py-3.5 px-4">Status</th>
+                    <th className="py-3.5 px-4">Assigned Roster</th>
+                    <th className="py-3.5 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-xs">
+                  {filteredTableRows.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-slate-400">
+                        <Table className="h-8 w-8 mx-auto mb-2 opacity-40 text-slate-400" />
+                        <p className="font-semibold text-slate-600">No volunteer shifts found</p>
+                        <p className="text-xs text-slate-400 mt-0.5">Try clearing your search or filter</p>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredTableRows.map((row) => (
+                      <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
+                        
+                        {/* Date Column */}
+                        <td className="py-3.5 px-4 whitespace-nowrap font-mono font-bold text-slate-900">
+                          {row.date}
+                        </td>
+
+                        {/* Program & Shift Column */}
+                        <td className="py-3.5 px-4">
+                          <div className="font-bold text-slate-900 text-xs">{row.program.topic}</div>
+                          <div className="text-[11px] text-slate-500 font-medium flex items-center gap-1 mt-0.5">
+                            <Clock className="h-3 w-3 text-[#155e4b]" />
+                            <span>{row.program.shift}</span>
+                          </div>
+                        </td>
+
+                        {/* Location Column */}
+                        <td className="py-3.5 px-4 whitespace-nowrap text-slate-600 font-medium">
+                          <div className="flex items-center gap-1 text-xs">
+                            <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                            <span>{row.program.location}</span>
+                          </div>
+                        </td>
+
+                        {/* Status Column */}
+                        <td className="py-3.5 px-4 whitespace-nowrap">
+                          {row.isUnstaffed ? (
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-900 border border-rose-300 inline-flex items-center gap-1">
+                              <AlertTriangle className="h-3 w-3 text-rose-600" />
+                              Unstaffed
+                            </span>
+                          ) : (
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300 inline-flex items-center gap-1">
+                              <UserCheck className="h-3 w-3 text-emerald-600" />
+                              Staffed ({row.assignedVolunteers.length} Vol)
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Assigned Roster Column */}
+                        <td className="py-3.5 px-4">
+                          {row.assignedVolunteers.length === 0 ? (
+                            <span className="text-[11px] text-slate-400 italic">No volunteers assigned</span>
+                          ) : (
+                            <div className="flex items-center gap-1.5">
+                              {row.assignedVolunteers.map(v => (
+                                <div
+                                  key={v.id}
+                                  onClick={() => onOpenProfile && onOpenProfile(v)}
+                                  className="h-6 w-6 rounded-full bg-[#155e4b] text-white text-[10px] font-bold flex items-center justify-center cursor-pointer hover:scale-110 transition-transform shadow-2xs"
+                                  title={`${v.firstName} ${v.lastName}`}
+                                >
+                                  {v.firstName[0]}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Action Column */}
+                        <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                          <button
+                            onClick={() => setSelectedPanel({ program: row.program, date: row.date })}
+                            className="px-3 py-1.5 rounded-xl bg-[#155e4b] hover:bg-[#0f4b3c] text-white text-xs font-bold transition-all shadow-2xs active:scale-95"
+                          >
+                            Manage →
+                          </button>
+                        </td>
+
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      )}
+
       {/* MONTH VIEW */}
-      {calendarViewMode === 'Month' && (
+      {mainLayoutMode === 'calendar' && calendarViewMode === 'Month' && (
         <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-2xs bg-white">
           <div className="grid grid-cols-7 bg-slate-100 border-b border-slate-200 text-center py-3 text-xs font-bold text-slate-700 uppercase tracking-wider font-mono">
             <div>Sun</div>
@@ -255,9 +505,19 @@ export default function CalendarView({
                 );
               }
 
-              const programsOnDay = programList.filter(prog => 
+              const rawProgramsOnDay = programList.filter(prog => 
                 day.formattedDate >= prog.startDate && day.formattedDate <= prog.endDate
               );
+
+              const programsOnDay = rawProgramsOnDay.filter(prog => {
+                if (!showUnstaffedOnly) return true;
+                const assignedList = volunteers.filter(v => 
+                  v.programAssignments && v.programAssignments.some(a => 
+                    a.programId === prog.id && a.assignedDate === day.formattedDate
+                  )
+                );
+                return assignedList.length === 0;
+              });
 
               return (
                 <div key={idx} className="min-h-[130px] p-2 bg-white hover:bg-slate-50 transition-colors flex flex-col justify-between group">
@@ -319,7 +579,7 @@ export default function CalendarView({
       )}
 
       {/* WEEK VIEW */}
-      {calendarViewMode === 'Week' && (
+      {mainLayoutMode === 'calendar' && calendarViewMode === 'Week' && (
         <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-2xs bg-white">
           <div className="grid grid-cols-7 bg-slate-100 border-b border-slate-200 text-center py-3 text-xs font-bold text-slate-700 uppercase tracking-wider font-mono">
             <div>Sun</div>
@@ -341,9 +601,19 @@ export default function CalendarView({
                 );
               }
 
-              const programsOnDay = programList.filter(prog => 
+              const rawProgramsOnDay = programList.filter(prog => 
                 day.formattedDate >= prog.startDate && day.formattedDate <= prog.endDate
               );
+
+              const programsOnDay = rawProgramsOnDay.filter(prog => {
+                if (!showUnstaffedOnly) return true;
+                const assignedList = volunteers.filter(v => 
+                  v.programAssignments && v.programAssignments.some(a => 
+                    a.programId === prog.id && a.assignedDate === day.formattedDate
+                  )
+                );
+                return assignedList.length === 0;
+              });
 
               return (
                 <div key={idx} className="p-3 bg-white hover:bg-slate-50/60 transition-colors flex flex-col justify-start">
@@ -403,7 +673,7 @@ export default function CalendarView({
       )}
 
       {/* DAY VIEW */}
-      {calendarViewMode === 'Day' && (
+      {mainLayoutMode === 'calendar' && calendarViewMode === 'Day' && (
         <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-2xs bg-white p-6">
           <div className="flex items-center justify-between border-b border-slate-200 pb-4 mb-6">
             <div>
@@ -421,9 +691,19 @@ export default function CalendarView({
 
           {/* List of Programs on this Single Day */}
           {(() => {
-            const dayPrograms = programList.filter(prog => 
+            const rawDayPrograms = programList.filter(prog => 
               selectedDayFormatted >= prog.startDate && selectedDayFormatted <= prog.endDate
             );
+
+            const dayPrograms = rawDayPrograms.filter(prog => {
+              if (!showUnstaffedOnly) return true;
+              const assignedList = volunteers.filter(v => 
+                v.programAssignments && v.programAssignments.some(a => 
+                  a.programId === prog.id && a.assignedDate === selectedDayFormatted
+                )
+              );
+              return assignedList.length === 0;
+            });
 
             if (dayPrograms.length === 0) {
               return (
@@ -488,7 +768,7 @@ export default function CalendarView({
                             onClick={() => setSelectedPanel({ program: prog, date: selectedDayFormatted })}
                             className="px-4 py-2 rounded-xl bg-[#155e4b] hover:bg-[#114b3c] text-white text-xs font-bold shadow-2xs transition-all"
                           >
-                            Manage Shift Roster →
+                            Manage →
                           </button>
                         </div>
                       </div>

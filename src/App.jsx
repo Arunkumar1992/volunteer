@@ -31,6 +31,15 @@ export default function App() {
   const [selectedProfileVol, setSelectedProfileVol] = useState(null);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
 
+  // External Shareable Form Mode detection
+  const [isExternalView, setIsExternalView] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('external') === 'true' || urlParams.get('form') === 'external';
+    }
+    return false;
+  });
+
   // Filters state
   const [searchTerm, setSearchTerm] = useState('');
   const [programFilter, setProgramFilter] = useState('All');
@@ -240,8 +249,57 @@ export default function App() {
       showToast('Application Submitted', `Welcome ${newRecord.firstName}! Added to pipeline in "Applied" stage.`, 'success');
     }
 
-    setActiveTab('volunteers'); // Switch to Volunteers module
+    if (!isExternalView) {
+      setActiveTab('volunteers'); // Switch to Volunteers module in CRM mode
+    }
   };
+
+  // Render Public Standalone External Application Portal Mode
+  if (isExternalView) {
+    return (
+      <div className="min-h-screen bg-[#f8fafb] text-slate-900 font-sans p-4 sm:p-8 flex flex-col items-center justify-start antialiased">
+        
+        {/* Top Header Bar for External Application Form */}
+        <div className="w-full max-w-4xl flex items-center justify-between mb-6 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-[#155e4b] text-white flex items-center justify-center font-black text-lg shadow-sm">
+              K
+            </div>
+            <div>
+              <h1 className="text-sm font-extrabold text-slate-900 leading-tight">Kids Innovative</h1>
+              <p className="text-xs text-[#155e4b] font-bold">Public Volunteer Application Portal</p>
+            </div>
+          </div>
+
+          <span className="px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold rounded-lg font-mono">
+            PUBLIC APPLICATION FORM
+          </span>
+        </div>
+
+        {/* Standalone Volunteer Application Form Only */}
+        <div className="w-full max-w-4xl">
+          <IntakeForm
+            volunteers={volunteers}
+            programs={programs}
+            shifts={shifts}
+            onSubmitIntake={handleSubmitIntake}
+            isExternalView={true}
+            showToast={showToast}
+          />
+        </div>
+
+        <footer className="mt-8 text-center text-xs text-slate-400 font-medium">
+          <p>© {new Date().getFullYear()} Kids Innovative STEAM Education Non-Profit • Public Volunteer Application Portal</p>
+        </footer>
+
+        {/* Notification Toast */}
+        <NotificationToast
+          toast={toast}
+          onClose={() => setToast(null)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f8fafb] text-slate-900 flex font-sans antialiased">
@@ -305,13 +363,16 @@ export default function App() {
             />
           )}
 
-          {/* New Volunteer Intake Form */}
+          {/* Volunteer Intake Form */}
           {activeTab === 'intake' && (
             <IntakeForm
               volunteers={volunteers}
               programs={programs}
               shifts={shifts}
               onSubmitIntake={handleSubmitIntake}
+              isExternalView={false}
+              onToggleExternalView={(val) => setIsExternalView(val)}
+              showToast={showToast}
             />
           )}
 

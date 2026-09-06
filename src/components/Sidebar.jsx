@@ -20,19 +20,19 @@ export default function Sidebar({ activeTab, setActiveTab, volunteerCount = 18 }
       title: 'OVERVIEW',
       items: [
         { id: 'volunteers', label: 'Volunteers', icon: Users, count: volunteerCount },
-        { id: 'calendar', label: 'Shift Roster', icon: Calendar },
+        { id: 'calendar', label: 'Volunteer Shifts', icon: Calendar },
       ]
     },
     {
-      title: 'PROGRAMS & SHIFTS',
+      title: 'PROGRAMS',
       items: [
-        { id: 'program_shifts', label: 'Programs & Shifts', icon: Layers, count: 5 },
+        { id: 'program_shifts', label: 'Programs', icon: Layers, count: 5 },
       ]
     },
     {
       title: 'APPLICATION FORMS',
       items: [
-        { id: 'intake', label: 'Apply Form', icon: UserPlus, badge: 'LIVE' },
+        { id: 'intake', label: 'Volunteer Form', icon: UserPlus, badge: 'PUBLIC' },
       ]
     }
   ];
