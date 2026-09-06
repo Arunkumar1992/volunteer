@@ -191,6 +191,7 @@ export default function App() {
         medicalNotes: intakeData.medicalNotes ? `${existing.medicalNotes || ''} [Updated: ${intakeData.medicalNotes}]` : existing.medicalNotes,
         programPreferences: Array.from(new Set([...(existing.programPreferences || []), ...(intakeData.programPreferences || [])])),
         shiftAvailability: Array.from(new Set([...(existing.shiftAvailability || []), ...(intakeData.shiftAvailability || [])])),
+        uploadedFile: intakeData.uploadedFile || existing.uploadedFile || null,
         isReturning: true,
         updatedAt: new Date().toISOString()
       };
@@ -221,6 +222,7 @@ export default function App() {
         emergencyContactPhone: intakeData.emergencyContactPhone,
         emergencyContactRelationship: intakeData.emergencyContactRelationship,
         medicalNotes: intakeData.medicalNotes || 'None',
+        uploadedFile: intakeData.uploadedFile || null,
         stage: 'Applied',
         backgroundCheck: {
           status: 'pending',

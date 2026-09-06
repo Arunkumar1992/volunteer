@@ -25,7 +25,9 @@ import {
   Send,
   MoreVertical,
   CheckSquare,
-  Square
+  Square,
+  Paperclip,
+  FileText
 } from 'lucide-react';
 
 export default function VolunteerList({ 
@@ -217,8 +219,13 @@ export default function VolunteerList({
                             {vol.firstName[0]}{vol.lastName[0]}
                           </div>
                           <div>
-                            <div className="font-bold text-slate-900 leading-tight hover:text-[#155e4b] transition-colors">
-                              {vol.firstName} {vol.lastName}
+                            <div className="font-bold text-slate-900 leading-tight hover:text-[#155e4b] transition-colors flex items-center gap-1.5">
+                              <span>{vol.firstName} {vol.lastName}</span>
+                              {vol.uploadedFile && (
+                                <span className="p-0.5 rounded bg-emerald-50 text-[#155e4b] border border-emerald-200" title={`Attached File: ${vol.uploadedFile.name}`}>
+                                  <Paperclip className="h-3 w-3" />
+                                </span>
+                              )}
                             </div>
                             <div className="text-[11px] text-slate-500 font-normal">
                               {vol.email}

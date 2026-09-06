@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, 
   Eye, 
@@ -20,7 +20,9 @@ import {
   Phone, 
   User, 
   MapPin, 
-  Sparkles 
+  Sparkles,
+  CloudUpload,
+  Trash2
 } from 'lucide-react';
 import { PIPELINE_STAGES, SHIFT_TYPES, SEED_PROGRAMS } from '../types';
 import { checkIsMinor, calculateAge, formatDate, getBackgroundCheckStatusInfo } from '../utils/formatters';
@@ -34,6 +36,7 @@ export default function VolunteerProfileModal({
   shifts = []
 }) {
   const [formData, setFormData] = useState({ ...volunteer });
+  const modalFileInputRef = useRef(null);
 
   const availablePrograms = programs && programs.length > 0 ? programs : SEED_PROGRAMS;
   const availableShifts = shifts && shifts.length > 0 ? shifts.map(s => typeof s === 'string' ? s : s.name) : SHIFT_TYPES;
@@ -422,6 +425,71 @@ export default function VolunteerProfileModal({
               className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#155e4b]/10 focus:border-[#155e4b] transition-all font-medium shadow-2xs"
               placeholder="Record allergies, medical conditions, or dietary restrictions..."
             />
+          </div>
+
+          {/* Section 6: Attached Documents & Waivers */}
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-slate-700 block flex items-center gap-1.5">
+                <FileText className="h-4 w-4 text-[#155e4b]" />
+                Attached Document / Resume / Waiver
+              </label>
+              <button
+                type="button"
+                onClick={() => modalFileInputRef.current?.click()}
+                className="text-[11px] font-bold text-[#155e4b] hover:underline flex items-center gap-1"
+              >
+                <CloudUpload className="h-3.5 w-3.5" />
+                {formData.uploadedFile ? 'Replace Document' : 'Upload File'}
+              </button>
+            </div>
+
+            <input
+              type="file"
+              ref={modalFileInputRef}
+              onChange={handleModalFileChange}
+              className="hidden"
+              accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+            />
+
+            {formData.uploadedFile ? (
+              <div className="p-4 bg-emerald-50/70 rounded-2xl border border-emerald-200 flex items-center justify-between shadow-2xs">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-white border border-emerald-200 text-[#155e4b] shadow-2xs">
+                    <FileText className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="text-xs sm:text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                      <span>{formData.uploadedFile.name}</span>
+                      <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold font-mono">
+                        Saved in Record ✓
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 font-mono mt-0.5">
+                      Size: {formatFileSize(formData.uploadedFile.size)} • Type: {formData.uploadedFile.type || 'Document'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleRemoveModalFile}
+                    className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                    title="Remove attached document from record"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div 
+                onClick={() => modalFileInputRef.current?.click()}
+                className="p-4 border-2 border-dashed border-slate-200 rounded-2xl text-center bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition-all"
+              >
+                <span className="text-xs text-slate-500 font-medium">No document attached to this volunteer record. <strong className="text-[#155e4b]">Click to upload</strong></span>
+              </div>
+            )}
           </div>
 
           {/* Section 6: Preferences & Shift Availability */}
