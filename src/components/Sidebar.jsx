@@ -104,21 +104,6 @@ export default function Sidebar({ activeTab, setActiveTab, volunteerCount = 18 }
         </div>
       </div>
 
-      {/* Sidebar Footer Goal Card matching bottom-left card in Amanah CRM mockup */}
-      <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2 mt-6">
-        <div className="flex items-center justify-between text-[11px]">
-          <span className="font-bold text-slate-800">Volunteer Goal</span>
-          <span className="text-[10px] text-slate-500 font-mono font-medium">18 / 25</span>
-        </div>
-        <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
-          <div className="h-full bg-[#155e4b] rounded-full w-[72%]" />
-        </div>
-        <div className="flex items-center justify-between text-[10px] text-slate-500 pt-0.5">
-          <span>72% reached</span>
-          <span className="text-[#155e4b] font-bold cursor-pointer hover:underline">View details</span>
-        </div>
-      </div>
-
     </aside>
   );
 }
