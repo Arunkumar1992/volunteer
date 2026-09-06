@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   SEED_PROGRAMS, 
   SHIFT_TYPES 
@@ -25,7 +25,8 @@ import {
   Copy,
   ExternalLink,
   Check,
-  Share2
+  Share2,
+  Trash2
 } from 'lucide-react';
 
 export default function IntakeForm({ 
@@ -52,11 +53,76 @@ export default function IntakeForm({
     emergencyContactRelationship: '',
     medicalNotes: '',
     programPreferences: [],
-    shiftAvailability: []
+    shiftAvailability: [],
+    uploadedFile: null
   });
 
   const [copiedLink, setCopiedLink] = useState(false);
   const [submittedExternal, setSubmittedExternal] = useState(false);
+
+  // File upload state & handlers
+  const fileInputRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const formatFileSize = (bytes) => {
+    if (!bytes) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
+  const handleFileSelect = (file) => {
+    if (!file) return;
+    setFormData(prev => ({
+      ...prev,
+      uploadedFile: {
+        name: file.name,
+        size: file.size,
+        type: file.type || 'Document'
+      }
+    }));
+    if (showToast) {
+      showToast('File Attached', `Selected file "${file.name}" for application.`, 'success');
+    }
+  };
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFileSelect(e.target.files[0]);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileSelect(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setFormData(prev => ({ ...prev, uploadedFile: null }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    if (showToast) {
+      showToast('File Removed', 'Attachment removed.', 'info');
+    }
+  };
 
   const age = calculateAge(formData.dateOfBirth);
   const isMinor = checkIsMinor(formData.dateOfBirth);
@@ -513,23 +579,72 @@ export default function IntakeForm({
           </div>
         </div>
 
-        {/* Section 6: Document & Portfolio Dropzone */}
+        {/* Section 6: Document, Resume & Waiver Upload */}
         <div className="space-y-3">
-          <div className="border-b border-slate-100 pb-2">
+          <div className="border-b border-slate-100 pb-2 flex items-center justify-between">
             <h3 className="text-sm sm:text-base font-extrabold text-slate-900">
-              Document & Waiver Upload (Optional)
+              Document, Resume & Waiver Upload (Optional)
             </h3>
+            <span className="text-xs text-slate-400 font-medium">PDF, DOCX, PNG, JPG</span>
           </div>
 
-          <div className="p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300 transition-all cursor-pointer">
-            <CloudUpload className="h-8 w-8 text-[#155e4b] mx-auto mb-2 opacity-80" />
-            <div className="text-xs sm:text-sm font-bold text-[#155e4b]">
-              Click to upload file <span className="text-slate-500 font-normal">or drag and drop file here</span>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+            accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+          />
+
+          {!formData.uploadedFile ? (
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`p-8 border-2 border-dashed rounded-2xl text-center transition-all cursor-pointer ${
+                isDragging
+                  ? 'border-[#155e4b] bg-emerald-50/60 scale-[1.01]'
+                  : 'border-slate-200 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-300'
+              }`}
+            >
+              <CloudUpload className="h-8 w-8 text-[#155e4b] mx-auto mb-2 opacity-80" />
+              <div className="text-xs sm:text-sm font-bold text-[#155e4b]">
+                Click to browse files <span className="text-slate-500 font-normal">or drag and drop file here</span>
+              </div>
+              <div className="text-[10px] sm:text-xs text-slate-400 mt-1 font-mono">
+                Maximal file size: 10 MB (PDF, DOCX, JPG, PNG format)
+              </div>
             </div>
-            <div className="text-[10px] sm:text-xs text-slate-400 mt-1 font-mono">
-              Maximal file size: 10 MB (PDF, JPG, PNG format)
+          ) : (
+            <div className="p-4 bg-emerald-50/60 rounded-2xl border border-emerald-200 flex items-center justify-between shadow-2xs animate-fade-in">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-white border border-emerald-200 text-[#155e4b] shadow-2xs">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="text-xs sm:text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                    <span>{formData.uploadedFile.name}</span>
+                    <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                      Attached ✓
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-slate-500 font-mono mt-0.5">
+                    Size: {formatFileSize(formData.uploadedFile.size)} • Type: {formData.uploadedFile.type || 'Document'}
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleRemoveFile}
+                className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                title="Remove attached file"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Form Actions (Matching bottom checkout submit button in reference image) */}
