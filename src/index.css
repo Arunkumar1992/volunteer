@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#f1f5f9] text-slate-900 min-h-screen font-sans antialiased selection:bg-teal-500 selection:text-white;
+  }
+}
+
+/* Custom scrollbars matching Zoho Bigin CRM */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Zoho Bigin Card & Panel Styling */
+.bigin-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+}
+
+.bigin-card:hover {
+  border-color: #0d9488;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+}
+
+/* Chevron Pipeline Header inspired by Bigin */
+.bigin-chevron-header {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+/* Stage badge styling */
+.stage-Applied { @apply bg-blue-50 text-blue-800 border-blue-200; }
+.stage-Screening { @apply bg-indigo-50 text-indigo-800 border-indigo-200; }
+.stage-BackgroundCheck { @apply bg-amber-50 text-amber-900 border-amber-200; }
+.stage-Onboarding { @apply bg-cyan-50 text-cyan-800 border-cyan-200; }
+.stage-Training { @apply bg-teal-50 text-teal-800 border-teal-200; }
+.stage-Shadowing { @apply bg-violet-50 text-violet-800 border-violet-200; }
+.stage-Active { @apply bg-emerald-50 text-emerald-800 border-emerald-200; }
+.stage-Assigned { @apply bg-pink-50 text-pink-800 border-pink-200; }
+.stage-Inactive { @apply bg-slate-100 text-slate-700 border-slate-300; }
