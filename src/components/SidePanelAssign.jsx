@@ -172,7 +172,7 @@ export default function SidePanelAssign({
                 <div key={v.id} className="flex items-center justify-between p-3 rounded-xl bg-emerald-50/80 border border-emerald-200 shadow-sm">
                   <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center font-bold text-emerald-800 text-xs">
-                      {v.firstName[0]}{v.lastName[0]}
+                      {((v.firstName || '')[0] || '').toUpperCase()}{((v.lastName || '')[0] || '').toUpperCase() || 'V'}
                     </div>
                     <div>
                       <button
@@ -225,7 +225,7 @@ export default function SidePanelAssign({
                   <div key={v.id} className="flex items-center justify-between p-3 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 transition-all shadow-sm">
                     <div className="flex items-center gap-3">
                       <div className="h-9 w-9 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center font-bold text-slate-800 text-xs">
-                        {v.firstName[0]}{v.lastName[0]}
+                        {((v.firstName || '')[0] || '').toUpperCase()}{((v.lastName || '')[0] || '').toUpperCase() || 'V'}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">

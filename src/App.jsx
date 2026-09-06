@@ -382,7 +382,7 @@ export default function App() {
 
         {/* Footer */}
         <footer className="bg-white border-t border-slate-200 py-3 text-center text-xs text-slate-500 font-medium">
-          <p>Kids Innovative STEAM Education Non-Profit • Volunteer Pipeline Tracker Demo Prototype</p>
+          <p>Kids Innovative Volunteer Pipeline Tracker</p>
         </footer>
 
       </div>

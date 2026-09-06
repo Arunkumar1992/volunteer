@@ -172,7 +172,7 @@ export default function KanbanBoard({
                         {/* Footer Stage Selector Row */}
                         <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
                           <div className="h-6 w-6 rounded-full bg-[#155e4b] text-white font-extrabold text-[10px] flex items-center justify-center shadow-2xs">
-                            {vol.firstName[0]}{vol.lastName[0]}
+                            {((vol.firstName || '')[0] || '').toUpperCase()}{((vol.lastName || '')[0] || '').toUpperCase() || 'V'}
                           </div>
 
                           {/* Stage dropdown selector labeled as Stage: */}

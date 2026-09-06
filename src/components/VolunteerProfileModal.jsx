@@ -35,14 +35,49 @@ export default function VolunteerProfileModal({
   programs = [],
   shifts = []
 }) {
-  const [formData, setFormData] = useState({ ...volunteer });
+  const initFormData = (vol) => {
+    if (!vol) return {};
+    return {
+      id: vol.id || '',
+      firstName: vol.firstName || '',
+      lastName: vol.lastName || '',
+      email: vol.email || '',
+      phone: vol.phone || '',
+      school: vol.school || '',
+      dateOfBirth: vol.dateOfBirth || '',
+      stage: vol.stage || 'Applied',
+      isMinor: vol.isMinor ?? checkIsMinor(vol.dateOfBirth),
+      guardianName: vol.guardianName || '',
+      guardianContact: vol.guardianContact || '',
+      guardianConsentGiven: vol.guardianConsentGiven ?? false,
+      emergencyContactName: vol.emergencyContactName || '',
+      emergencyContactPhone: vol.emergencyContactPhone || '',
+      emergencyContactRelationship: vol.emergencyContactRelationship || '',
+      medicalNotes: vol.medicalNotes || '',
+      uploadedFile: vol.uploadedFile || null,
+      trainingCompleted: vol.trainingCompleted ?? false,
+      ...vol,
+      programPreferences: Array.isArray(vol?.programPreferences) ? vol.programPreferences : [],
+      shiftAvailability: Array.isArray(vol?.shiftAvailability) ? vol.shiftAvailability : [],
+      backgroundCheck: {
+        status: 'pending',
+        clearedDate: '',
+        expiryDate: '',
+        ...(vol?.backgroundCheck || {})
+      }
+    };
+  };
+
+  const [formData, setFormData] = useState(() => initFormData(volunteer));
   const modalFileInputRef = useRef(null);
 
   const availablePrograms = programs && programs.length > 0 ? programs : SEED_PROGRAMS;
   const availableShifts = shifts && shifts.length > 0 ? shifts.map(s => typeof s === 'string' ? s : s.name) : SHIFT_TYPES;
 
   useEffect(() => {
-    setFormData({ ...volunteer });
+    if (volunteer) {
+      setFormData(initFormData(volunteer));
+    }
   }, [volunteer]);
 
   if (!volunteer) return null;
@@ -50,6 +85,40 @@ export default function VolunteerProfileModal({
   const age = calculateAge(formData.dateOfBirth);
   const isMinor = checkIsMinor(formData.dateOfBirth);
   const bgInfo = getBackgroundCheckStatusInfo(formData.backgroundCheck);
+
+  const formatFileSize = (bytes) => {
+    if (!bytes) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
+  const handleModalFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setFormData(prev => ({
+        ...prev,
+        uploadedFile: {
+          name: file.name,
+          size: file.size,
+          type: file.type || 'Document'
+        },
+        updatedAt: new Date().toISOString()
+      }));
+    }
+  };
+
+  const handleRemoveModalFile = () => {
+    setFormData(prev => ({
+      ...prev,
+      uploadedFile: null,
+      updatedAt: new Date().toISOString()
+    }));
+    if (modalFileInputRef.current) {
+      modalFileInputRef.current.value = '';
+    }
+  };
 
   // Handle Field Changes
   const handleChange = (field, value) => {
@@ -66,7 +135,7 @@ export default function VolunteerProfileModal({
 
   // Toggle Program Preference
   const toggleProgramPref = (progId) => {
-    const current = formData.programPreferences || [];
+    const current = Array.isArray(formData.programPreferences) ? formData.programPreferences : [];
     const exists = current.includes(progId);
     const updated = exists ? current.filter(id => id !== progId) : [...current, progId];
     handleChange('programPreferences', updated);
@@ -74,22 +143,24 @@ export default function VolunteerProfileModal({
 
   // Toggle Shift Availability
   const toggleShiftAvail = (shiftName) => {
-    const current = formData.shiftAvailability || [];
-    const exists = current.includes(shiftName);
-    const updated = exists ? current.filter(s => s !== shiftName) : [...current, shiftName];
+    const current = Array.isArray(formData.shiftAvailability) ? formData.shiftAvailability : [];
+    const exists = current.map(s => typeof s === 'string' ? s : s.name).includes(shiftName);
+    const updated = exists 
+      ? current.filter(s => (typeof s === 'string' ? s : s.name) !== shiftName) 
+      : [...current, shiftName];
     handleChange('shiftAvailability', updated);
   };
 
   // Handle Nested Background Check updates
   const handleBgChange = (subField, value) => {
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       backgroundCheck: {
-        ...formData.backgroundCheck,
+        ...(prev.backgroundCheck || {}),
         [subField]: value
       },
       updatedAt: new Date().toISOString()
-    });
+    }));
   };
 
   // Handle Save
@@ -105,7 +176,7 @@ export default function VolunteerProfileModal({
     )}`;
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute('href', jsonString);
-    downloadAnchor.setAttribute('download', `volunteer_${formData.id}_data_export.json`);
+    downloadAnchor.setAttribute('download', `volunteer_${formData.id || 'record'}_data_export.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -120,7 +191,7 @@ export default function VolunteerProfileModal({
           <div className="flex items-center gap-3">
             <div className="h-12 w-12 rounded-xl bg-gradient-to-tr from-[#155e4b] to-emerald-700 p-0.5 shadow-md shrink-0">
               <div className="h-full w-full bg-white rounded-[10px] flex items-center justify-center font-extrabold text-[#155e4b] text-lg">
-                {formData.firstName[0]}{formData.lastName[0]}
+                {((formData.firstName || '')[0] || '').toUpperCase()}{((formData.lastName || '')[0] || '').toUpperCase() || 'V'}
               </div>
             </div>
             <div>

@@ -346,7 +346,7 @@ export default function GoogleCalendarView({
                       <div key={v.id} className="p-2.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
                           <div className="h-7 w-7 rounded-full bg-[#155e4b] text-white font-bold text-xs flex items-center justify-center">
-                            {v.firstName[0]}{v.lastName[0]}
+                            {((v.firstName || '')[0] || '').toUpperCase()}{((v.lastName || '')[0] || '').toUpperCase() || 'V'}
                           </div>
                           <div>
                             <div className="text-xs font-bold text-slate-900">{v.firstName} {v.lastName}</div>

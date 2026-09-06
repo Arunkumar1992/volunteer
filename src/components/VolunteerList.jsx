@@ -216,7 +216,7 @@ export default function VolunteerList({
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
                           <div className={`h-8 w-8 rounded-full ${avatarBg} font-extrabold text-xs flex items-center justify-center shrink-0 shadow-2xs`}>
-                            {vol.firstName[0]}{vol.lastName[0]}
+                            {((vol.firstName || '')[0] || '').toUpperCase()}{((vol.lastName || '')[0] || '').toUpperCase() || 'V'}
                           </div>
                           <div>
                             <div className="font-bold text-slate-900 leading-tight hover:text-[#155e4b] transition-colors flex items-center gap-1.5">

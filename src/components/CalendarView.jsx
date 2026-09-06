@@ -454,7 +454,7 @@ export default function CalendarView({
                                   className="h-6 w-6 rounded-full bg-[#155e4b] text-white text-[10px] font-bold flex items-center justify-center cursor-pointer hover:scale-110 transition-transform shadow-2xs"
                                   title={`${v.firstName} ${v.lastName}`}
                                 >
-                                  {v.firstName[0]}
+                                  {((v.firstName || '')[0] || '').toUpperCase() || 'V'}
                                 </div>
                               ))}
                             </div>
@@ -785,7 +785,7 @@ export default function CalendarView({
                             {assignedList.map(v => (
                               <div key={v.id} className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center gap-2 text-xs font-bold text-slate-800">
                                 <div className="h-5 w-5 rounded-full bg-[#155e4b] text-white text-[10px] flex items-center justify-center font-mono">
-                                  {v.firstName[0]}
+                                  {((v.firstName || '')[0] || '').toUpperCase() || 'V'}
                                 </div>
                                 <span>{v.firstName} {v.lastName}</span>
                               </div>
