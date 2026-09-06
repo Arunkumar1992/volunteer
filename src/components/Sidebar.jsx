@@ -44,7 +44,6 @@ export default function Sidebar({ activeTab, setActiveTab, volunteerCount = 18 }
             </div>
             <div>
               <h1 className="text-xs font-bold text-slate-900 leading-tight">Kids Innovative</h1>
-              <p className="text-[11px] text-slate-500 font-medium leading-none mt-0.5">Volunteer CRM</p>
             </div>
           </div>
           <ChevronsUpDown className="h-4 w-4 text-slate-400" />
